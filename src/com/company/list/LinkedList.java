@@ -1,20 +1,86 @@
 package com.company.list;
 
-public class LinkedList {
+import static  com.company.list.Position.AFTER;
+import static  com.company.list.Position.BEFORE;
 
-    public  static final int BEFORE = 0;
-    public static  final int AFTER = 0;
 
-    private Node head;
-    private Node tail;
+public class LinkedList<G> implements List<G> {
+
+    private static class Node<T> {
+        private final T data;
+        private Node<T> previous;
+        private Node<T> next;
+
+        Node(T data) {
+            this.data = data;
+        }
+    }
+
+    private  Node<G> head;
+    private Node<G> tail;
     private int size;
 
-    public void add(int data){
-        Node node = new Node(data);
-        node.setPrevious(tail);
+    public class Iterator implements IteratorG <G>{
+        private Node<G> currentNode;
+
+        public Iterator(){
+            this.currentNode = head;
+        }
+
+        public Iterator(Iterator iterator){
+            currentNode = iterator.currentNode;
+        }
+
+        public boolean hasNext(){
+            return currentNode != null;
+        }
+
+        public G next(){
+            G data = currentNode.data;
+            currentNode = currentNode.next;
+            return data;
+        }
+
+        Node <G> getCurrentNode(){
+            return currentNode;
+        }
+    }
+
+    public class ReverseIterator implements IteratorG<G>{
+        private Node<G> currentNode;
+
+        public ReverseIterator(){
+            this.currentNode = tail;
+        }
+
+        public boolean hasNext(){
+            return currentNode != null;
+        }
+
+        public G next(){
+            G data = currentNode.data;
+            currentNode = currentNode.previous;
+            return data;
+        }
+    }
+
+    public  LinkedList(){
+        listsCount ++;
+    }
+
+    private static int listsCount = 0;
+
+    private static int getListCount(){
+        return  listsCount;
+    }
+
+    @Override
+    public  void add(G data){
+        Node<G> node = new Node<>(data);
+        node.previous = tail;
 
         if(tail != null){
-            tail.setNext(node);
+            tail.next = node;
         }
 
         if(head == null){
@@ -24,23 +90,22 @@ public class LinkedList {
         tail = node;
         size++;
     }
-    public int getSize(){
-        return size;
-    }
 
-    public int get (int index){
-        Node currentNode = head;
+    @Override
+    public G get (int index){
+        Node<G> currentNode = head;
         int currentIndex = 0;
 
         while (currentIndex < index){
-            currentNode = currentNode.getNext();
+            currentNode = currentNode.next;
             currentIndex++;
         }
-        return currentNode.getData();
+        return currentNode.data;
     }
 
+    @Override
     public void delete(int index){
-        Node currentNode = head;
+        Node<G> currentNode = head;
         int currentIndex = 0;
 
         if (index < 0 || index >= size){
@@ -55,45 +120,47 @@ public class LinkedList {
         }
 
         if (index == size){
-            tail = tail.getPrevious();
-            tail.setNext(null);
+            tail = tail.previous;
+            tail.next = null;
+        }
+
+        if (index == 0){
+            head = head.next;
+            head.previous = null;
         }
 
         if (index > 0 && index < size){
             while (currentIndex < index){
-                currentNode = currentNode.getNext();
+                currentNode = currentNode.next;
                 currentIndex++;
             }
-            currentNode.getPrevious().setNext(currentNode.getNext());
-            currentNode.getNext().setPrevious(currentNode.getPrevious());
+            currentNode.previous.next = currentNode.next;
+            currentNode.next.previous = currentNode.previous;
         }
     }
 
-    public  Iterator getIterator(){
-        return new Iterator(head);
-    }
-
-    public void insert(int data, int position, Iterator ite){
-        Node newNode = new Node(data);
-        Node currentnode = ite.getCurrentnode();
+    @Override
+    public void insert(G data, Position position, IteratorG<G> it){
+        Node<G> newNode = new Node(data);
+        Node<G> currentnode = ((Iterator)it).getCurrentNode();
 
         if (position == AFTER){
-            newNode.setNext(currentnode.getNext());
-            newNode.setPrevious(currentnode);
-            currentnode.setNext(newNode);
-            if (newNode.getNext() != null){
-                newNode.getNext().setPrevious(newNode);
+            newNode.next =currentnode.next;
+            newNode.previous = currentnode;
+            currentnode.next = newNode;
+            if (newNode.next != null){
+                newNode.previous.next = newNode;
             }
             else{
                 tail = newNode;
             }
         }
         else if (position == BEFORE){
-            newNode.setPrevious(currentnode.getPrevious());
-            newNode.setNext(currentnode);
-            currentnode.setPrevious(newNode);
-            if (newNode.getPrevious() != null){
-                newNode.getPrevious().setPrevious(newNode);
+            newNode.previous = currentnode.previous;
+            newNode.next = currentnode;
+            currentnode.previous =newNode;
+            if (newNode.previous != null){
+                newNode.previous.next = newNode;
             }
             else{
                 head = newNode;
@@ -106,8 +173,24 @@ public class LinkedList {
 
     }
 
+    @Override
+    public IteratorG<G> getReverseIterator() {
+        return null;
+    }
+
+    public  Iterator getIterator(){
+        return new Iterator();
+    }
+
+
+
     public ReverseIterator getReverseItarator(){
-        return new ReverseIterator(tail);
+        return new ReverseIterator();
+    }
+
+    @Override
+    public int getSize(){
+        return  size;
     }
 }
 
